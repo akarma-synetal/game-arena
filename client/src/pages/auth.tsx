@@ -8,10 +8,6 @@ import { CyberCard, NeonBadge } from "@/components/ui-extras";
 export default function AuthPage() {
   const { data: settings } = useQuery({ queryKey: [api.settings.get.path] });
   const { data: tournaments } = useQuery({ queryKey: [api.tournaments.list.path] });
-  
-  const handleLogin = () => {
-    window.location.href = "/api/login";
-  };
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/30">
@@ -23,11 +19,12 @@ export default function AuthPage() {
           </div>
           <span className="font-display font-bold text-2xl tracking-[0.2em] text-glow uppercase">{settings?.appName || "BATTLEROOF"}</span>
         </div>
-        <div className="hidden lg:flex items-center gap-8 uppercase text-[10px] tracking-[0.3em] font-display text-muted-foreground">
+        <div className="hidden lg:flex items-center gap-6 uppercase text-[10px] tracking-[0.3em] font-display text-muted-foreground">
           <a href="#tournaments" className="hover:text-primary transition-colors">Tournaments</a>
           <a href="#features" className="hover:text-primary transition-colors">Scrims</a>
           <a href="#giveaways" className="hover:text-primary transition-colors">Giveaways</a>
-          <Button onClick={handleLogin} variant="outline" className="border-primary/30 text-primary hover:bg-primary hover:text-black font-display tracking-widest text-xs h-10 px-6">Login</Button>
+          <Button onClick={() => { window.location.href = "/login"; }} variant="outline" className="border-primary/30 text-primary hover:bg-primary hover:text-black font-display tracking-widest text-xs h-10 px-6">Login</Button>
+          <Button onClick={() => { window.location.href = "/register"; }} className="bg-primary/20 text-primary hover:bg-primary hover:text-black font-display tracking-widest text-xs h-10 px-6">Register</Button>
         </div>
       </nav>
 
@@ -54,10 +51,10 @@ export default function AuthPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button 
-              onClick={handleLogin}
+              onClick={() => { window.location.href = "/register"; }}
               className="h-16 px-12 text-lg font-display uppercase tracking-widest font-bold bg-white text-black hover:bg-primary hover:text-white transition-all duration-500 shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_50px_hsl(var(--primary)/0.5)] border-none"
             >
-              Start Your Career
+              Create Your Account
             </Button>
             <Button variant="ghost" className="h-16 px-12 text-sm uppercase tracking-widest font-display text-muted-foreground hover:text-white">View Leaderboards</Button>
           </div>
@@ -98,7 +95,7 @@ export default function AuthPage() {
                       <span>Entry</span>
                       <span className="text-white">Authorized Members Only</span>
                    </div>
-                   <Button onClick={handleLogin} className="w-full h-12 bg-white/5 hover:bg-primary hover:text-black border border-white/10 hover:border-transparent transition-all uppercase font-display tracking-widest text-[10px]">Access Briefing</Button>
+                   <Button onClick={() => { window.location.href = "/login"; }} className="w-full h-12 bg-white/5 hover:bg-primary hover:text-black border border-white/10 hover:border-transparent transition-all uppercase font-display tracking-widest text-[10px]">Access Briefing</Button>
                 </div>
               </CyberCard>
             ))}

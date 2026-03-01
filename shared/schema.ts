@@ -107,6 +107,16 @@ export const giveaways = pgTable("giveaways", {
   isActive: boolean("is_active").default(true),
 });
 
+// Local auth accounts (localhost only)
+export const localAccounts = pgTable("local_accounts", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  username: text("username").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  role: text("role").notNull().default("player"), // "player" | "admin"
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // === RELATIONS ===
 export const teamsRelations = relations(teams, ({ one, many }) => ({
   game: one(games, { fields: [teams.gameId], references: [games.id] }),
@@ -144,6 +154,7 @@ export type Challenge = typeof challenges.$inferSelect;
 export type PlayerProfile = typeof playerProfiles.$inferSelect;
 export type Settings = typeof settings.$inferSelect;
 export type Giveaway = typeof giveaways.$inferSelect;
+export type LocalAccount = typeof localAccounts.$inferSelect;
 
 export type CreateTeamRequest = z.infer<typeof insertTeamSchema>;
 export type CreateTournamentRequest = z.infer<typeof insertTournamentSchema>;

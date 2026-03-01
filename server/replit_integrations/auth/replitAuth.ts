@@ -7,6 +7,11 @@ import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { authStorage } from "./storage";
+import { storage } from "../../storage";
+import { db } from "../../db";
+import { localAccounts } from "@shared/schema";
+import { eq } from "drizzle-orm";
+import crypto from "crypto";
 
 const getOidcConfig = memoize(
   async () => {
@@ -34,7 +39,7 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === "production" && process.env.LOCAL_AUTH !== "true",
       maxAge: sessionTtl,
     },
   });
@@ -60,11 +65,150 @@ async function upsertUser(claims: any) {
   });
 }
 
+function hashPassword(password: string) {
+  const salt = process.env.LOCAL_AUTH_SALT || "local-auth-salt";
+  return crypto.createHash("sha256").update(`${salt}:${password}`).digest("hex");
+}
+
+async function ensureAdminAccount() {
+  const adminUsername = "admin";
+  const existing = await db.select().from(localAccounts).where(eq(localAccounts.username, adminUsername));
+  if (existing.length > 0) return;
+
+  const adminUserId = "local-admin";
+  await authStorage.upsertUser({
+    id: adminUserId,
+    email: "admin@local",
+    firstName: "Admin",
+    lastName: "User",
+    profileImageUrl: null,
+  });
+
+  await db.insert(localAccounts).values({
+    userId: adminUserId,
+    username: adminUsername,
+    passwordHash: hashPassword("admin"),
+    role: "admin",
+  });
+}
+
 export async function setupAuth(app: Express) {
   app.set("trust proxy", 1);
   app.use(getSession());
   app.use(passport.initialize());
   app.use(passport.session());
+
+  const isLocalAuth = process.env.LOCAL_AUTH === "true";
+  if (isLocalAuth) {
+    await ensureAdminAccount();
+
+    app.post("/api/player/register", async (req, res) => {
+      const username = String(req.body?.username || "").trim();
+      const password = String(req.body?.password || "");
+      const inGameName = String(req.body?.inGameName || username).trim();
+
+      if (!username || !password) {
+        return res.status(400).json({ message: "Username and password required" });
+      }
+
+      const existing = await db.select().from(localAccounts).where(eq(localAccounts.username, username));
+      if (existing.length > 0) {
+        return res.status(409).json({ message: "Username already exists" });
+      }
+
+      const userId = `local-${username}`;
+      const user = await authStorage.upsertUser({
+        id: userId,
+        email: `${username}@local`,
+        firstName: username,
+        lastName: "Player",
+        profileImageUrl: null,
+      });
+
+      await db.insert(localAccounts).values({
+        userId,
+        username,
+        passwordHash: hashPassword(password),
+        role: "player",
+      });
+
+      await storage.upsertPlayerProfile(userId, {
+        inGameName: inGameName || username,
+        gameId: 1,
+        rank: "Bronze",
+        level: 1,
+        matchesPlayed: 0,
+        subscriptionTier: "free",
+      });
+
+      const sessionData = req.session as any;
+      sessionData.localUserId = userId;
+      sessionData.localRole = "player";
+
+      return res.json({ ok: true, user });
+    });
+
+    app.post("/api/player/login", async (req, res) => {
+      const username = String(req.body?.username || "").trim();
+      const password = String(req.body?.password || "");
+      if (!username || !password) {
+        return res.status(400).json({ message: "Username and password required" });
+      }
+
+      const [account] = await db.select().from(localAccounts).where(eq(localAccounts.username, username));
+      if (!account || account.passwordHash !== hashPassword(password)) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      const user = await authStorage.getUser(account.userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      const sessionData = req.session as any;
+      sessionData.localUserId = account.userId;
+      sessionData.localRole = account.role;
+
+      return res.json({ ok: true, user });
+    });
+
+    app.post("/api/admin/login", async (req, res) => {
+      const username = String(req.body?.username || "").trim();
+      const password = String(req.body?.password || "");
+
+      const [account] = await db.select().from(localAccounts).where(eq(localAccounts.username, username));
+      if (!account || account.role !== "admin" || account.passwordHash !== hashPassword(password)) {
+        return res.status(401).json({ message: "Invalid admin credentials" });
+      }
+
+      const profile = await storage.upsertPlayerProfile(account.userId, {
+        inGameName: "Admin",
+        gameId: 1,
+        rank: "Bronze",
+        level: 1,
+        matchesPlayed: 0,
+        subscriptionTier: "free",
+      });
+      await storage.updateProfile(profile.id, { isAdmin: true });
+
+      const sessionData = req.session as any;
+      sessionData.localUserId = account.userId;
+      sessionData.localRole = "admin";
+
+      return res.json({ ok: true });
+    });
+
+    app.post("/api/logout", (req, res) => {
+      const sessionData = req.session as any;
+      if (sessionData) {
+        sessionData.localUserId = null;
+        sessionData.localRole = null;
+      }
+      res.json({ ok: true });
+    });
+
+    return;
+  }
 
   const config = await getOidcConfig();
 
@@ -131,6 +275,27 @@ export async function setupAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
+  if (process.env.LOCAL_AUTH === "true") {
+    const sessionData = (req.session as any) || {};
+    if (sessionData.localUserId) {
+      const role = sessionData.localRole === "admin" ? "admin" : "player";
+      req.user = {
+        claims: {
+          sub: sessionData.localUserId,
+          email: `${sessionData.localUserId}@local`,
+          first_name: role === "admin" ? "Admin" : "Player",
+          last_name: "Dev",
+          profile_image_url: null,
+        },
+        access_token: "dev",
+        refresh_token: null,
+        expires_at: Math.floor(Date.now() / 1000) + 3600,
+      } as any;
+      return next();
+    }
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
   const user = req.user as any;
 
   if (!req.isAuthenticated() || !user.expires_at) {
