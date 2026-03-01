@@ -32,11 +32,11 @@ export default function PublicShell({
         </div>
         <div className="hidden lg:flex items-center gap-8 uppercase text-xs md:text-sm tracking-[0.4em] font-display font-semibold text-muted-foreground">
           <a href="/" className="hover:text-primary transition-colors">Home</a>
-          <a href="/leaderboard" className="hover:text-primary transition-colors">Leaderboard</a>
-          <a href="/blogs" className="hover:text-primary transition-colors">Blogs</a>
-          <a href="/plans" className="hover:text-primary transition-colors">Plans</a>
-          <a href="/about" className="hover:text-primary transition-colors">About</a>
-          <a href="/contact" className="hover:text-primary transition-colors">Contact</a>
+          <a href="/#leaderboard" className="hover:text-primary transition-colors">Leaderboard</a>
+          <a href="/#blogs" className="hover:text-primary transition-colors">Blogs</a>
+          <a href="/#plans" className="hover:text-primary transition-colors">Plans</a>
+          <a href="/#about" className="hover:text-primary transition-colors">About</a>
+          <a href="/#contact" className="hover:text-primary transition-colors">Contact</a>
           <Button
             onClick={() => { window.location.href = "/login"; }}
             variant="ghost"

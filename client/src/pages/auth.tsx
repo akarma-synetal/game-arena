@@ -3,17 +3,34 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { motion } from "framer-motion";
-import { Swords, Trophy, Users, ShieldCheck, Zap, Newspaper, MessageSquare, Star } from "lucide-react";
+import { Swords, Trophy, Users, ShieldCheck, Zap, Newspaper, MessageSquare, Star, Crown, Medal } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@shared/routes";
 import { CyberCard, NeonBadge, SectionHeading, PageBg } from "@/components/ui-extras";
+import { useLeaderboard } from "@/hooks/use-profiles";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export default function AuthPage() {
   const { data: settings } = useQuery({ queryKey: [api.settings.get.path] });
   const { data: tournaments } = useQuery({ queryKey: [api.tournaments.list.path] });
+  const { data: leaderboardProfiles, isLoading: lbLoading } = useLeaderboard();
+  const fallbackProfiles = [
+    { id: 1, inGameName: "ShadowReaper", elo: 1880, winnings: 12400, game: { name: "BGMI" } },
+    { id: 2, inGameName: "NovaStrike", elo: 1765, winnings: 9800, game: { name: "Valorant" } },
+    { id: 3, inGameName: "RoguePulse", elo: 1680, winnings: 7600, game: { name: "Free Fire" } },
+    { id: 4, inGameName: "EchoViper", elo: 1605, winnings: 5200, game: { name: "BGMI" } },
+    { id: 5, inGameName: "IronFang", elo: 1540, winnings: 4100, game: { name: "Valorant" } },
+  ];
+  const lbData = leaderboardProfiles && leaderboardProfiles.length > 0 ? leaderboardProfiles : fallbackProfiles;
+  const getRankIcon = (i: number) => {
+    if (i === 0) return <Crown className="w-5 h-5 text-yellow-500 drop-shadow-[0_0_8px_rgba(234,179,8,0.6)]" />;
+    if (i === 1) return <Medal className="w-5 h-5 text-gray-300 drop-shadow-[0_0_8px_rgba(209,213,219,0.6)]" />;
+    if (i === 2) return <Medal className="w-5 h-5 text-amber-700 drop-shadow-[0_0_8px_rgba(180,83,9,0.6)]" />;
+    return <span className="font-display font-bold text-muted-foreground">{i + 1}</span>;
+  };
 
   return (
-    <div className="min-h-screen bg-background text-foreground selection:bg-primary/30">
+    <div className="min-h-screen bg-background text-foreground selection:bg-primary/30 scroll-smooth">
       <PageBg image="/images/bgmi.png" />
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 glass-panel border-b border-white/5 px-6 lg:px-16 py-4 flex items-center justify-between">
@@ -24,12 +41,12 @@ export default function AuthPage() {
           <span className="font-display font-bold text-2xl tracking-[0.2em] text-glow uppercase">{settings?.appName || "BATTLEROOF"}</span>
         </div>
         <div className="hidden lg:flex items-center gap-8 uppercase text-xs md:text-sm tracking-[0.4em] font-display font-semibold text-muted-foreground">
-          <a href="/tournaments" className="hover:text-primary transition-colors">Tournaments</a>
-          <a href="/leaderboard" className="hover:text-primary transition-colors">Leaderboard</a>
-          <a href="/blogs" className="hover:text-primary transition-colors">Blogs</a>
-          <a href="/plans" className="hover:text-primary transition-colors">Plans</a>
-          <a href="/about" className="hover:text-primary transition-colors">About</a>
-          <a href="/contact" className="hover:text-primary transition-colors">Contact</a>
+          <a href="#hero" className="hover:text-primary transition-colors">Home</a>
+          <a href="#leaderboard" className="hover:text-primary transition-colors">Leaderboard</a>
+          <a href="#blogs" className="hover:text-primary transition-colors">Blogs</a>
+          <a href="#plans" className="hover:text-primary transition-colors">Plans</a>
+          <a href="#about" className="hover:text-primary transition-colors">About</a>
+          <a href="#contact" className="hover:text-primary transition-colors">Contact</a>
           <Button
             onClick={() => { window.location.href = "/login"; }}
             variant="ghost"
@@ -47,7 +64,7 @@ export default function AuthPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center pt-28 px-6 overflow-hidden">
+      <section id="hero" className="relative min-h-screen flex flex-col items-center justify-center pt-28 px-6 overflow-hidden">
         <div className="absolute inset-0 bg-[url('/images/bgmi.png')] bg-cover bg-center opacity-10" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,0,153,0.25),_transparent_55%)]" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/70 to-background" />
@@ -98,12 +115,55 @@ export default function AuthPage() {
         </motion.div>
       </section>
 
+      {/* Leaderboard */}
+      <section id="leaderboard" className="py-28 px-6 lg:px-16 bg-card border-y border-white/5">
+        <div className="max-w-5xl mx-auto">
+          <div className="mb-12">
+            <SectionHeading title="Global Rankings" eyebrow="Live" subtitle="Top operatives sorted by combat rating (ELO)" />
+          </div>
+          <CyberCard className="p-0 overflow-hidden rounded-3xl border-white/10 bg-black/50">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-black/50 border-b border-white/10">
+                    <th className="p-4 font-display text-xs uppercase tracking-widest text-muted-foreground w-16 text-center">Rank</th>
+                    <th className="p-4 font-display text-xs uppercase tracking-widest text-muted-foreground">Operative</th>
+                    <th className="p-4 font-display text-xs uppercase tracking-widest text-muted-foreground">Game</th>
+                    <th className="p-4 font-display text-xs uppercase tracking-widest text-muted-foreground text-right">Winnings</th>
+                    <th className="p-4 font-display text-xs uppercase tracking-widest text-primary text-right">ELO</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lbLoading ? (
+                    <tr><td colSpan={5} className="p-8 text-center text-muted-foreground animate-pulse">Computing standings...</td></tr>
+                  ) : lbData.map((p: any, i: number) => (
+                    <tr key={p.id} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
+                      <td className="p-4 text-center"><div className="flex justify-center">{getRankIcon(i)}</div></td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-9 w-9 border border-white/10 group-hover:border-primary/50 transition-colors">
+                            <AvatarFallback className="bg-black text-xs font-bold">{p.inGameName.substring(0,2).toUpperCase()}</AvatarFallback>
+                          </Avatar>
+                          <span className="font-display font-bold tracking-wider">{p.inGameName}</span>
+                        </div>
+                      </td>
+                      <td className="p-4"><NeonBadge color="muted">{p.game?.name || "Global"}</NeonBadge></td>
+                      <td className="p-4 text-right font-mono text-muted-foreground text-sm">{p.winnings ? `${p.winnings} RC` : '-'}</td>
+                      <td className="p-4 text-right"><span className="font-display font-bold text-xl text-primary text-glow">{p.elo || 1000}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CyberCard>
+        </div>
+      </section>
+
       {/* Daily Tournaments Preview */}
       <section id="tournaments" className="py-28 px-6 lg:px-16 bg-background relative">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-end mb-12 border-b border-white/5 pb-8">
             <SectionHeading title="Active Missions" eyebrow="Live" subtitle="Tactical deployments across all regions" />
-            <Button variant="ghost" className="text-primary text-[10px] tracking-widest uppercase font-display shrink-0">View All</Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -192,35 +252,38 @@ export default function AuthPage() {
       {/* Subscription Plans */}
       <section id="plans" className="py-28 px-6 lg:px-16 bg-card/50 border-y border-white/5">
         <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-end mb-12">
+          <div className="mb-12">
             <SectionHeading title="Subscription Plans" subtitle="Choose your loadout" />
-            <Button variant="ghost" onClick={() => { window.location.href = "/plans"; }} className="text-primary text-[10px] tracking-widest uppercase font-display shrink-0">See All Plans</Button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { name: "Rookie", price: "Free", perks: ["Ranked access", "Basic scrims", "Starter badges"] },
-              { name: "Pro", price: "₹450/mo", perks: ["Priority scrims", "Advanced stats", "Seasonal rewards"] },
-              { name: "Elite", price: "₹1,250/mo", perks: ["VIP tournaments", "Coach review", "Exclusive drops"] }
-            ].map((plan) => (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {([
+              { name: "Rookie", price: "Free", badge: "accent", featured: false, perks: ["Ranked access", "Basic scrims", "Starter badges", "Community chat"] },
+              { name: "Pro", price: "₹450/mo", badge: "primary", featured: true, perks: ["Priority scrims", "Advanced stats", "Seasonal rewards", "Team management", "Exclusive tournaments"] },
+              { name: "Elite", price: "₹1,250/mo", badge: "secondary", featured: false, perks: ["VIP tournaments", "Coach review", "Exclusive drops", "Custom squad page", "Priority support"] }
+            ] as const).map((plan) => (
               <CyberCard
                 key={plan.name}
-                glowColor="primary"
-                className="group relative overflow-hidden rounded-[28px] border border-white/10 bg-black/50 p-8 shadow-[0_0_40px_rgba(255,0,153,0.12)] space-y-6"
+                glowColor={plan.featured ? "primary" : undefined}
+                className={`p-8 flex flex-col gap-6 rounded-3xl border-white/10 bg-black/50 ${plan.featured ? "ring-1 ring-primary/40 shadow-[0_0_40px_rgba(255,0,153,0.15)]" : ""}`}
               >
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-primary/15 via-transparent to-accent/10" />
-                <div className="relative flex items-center justify-between">
-                  <h3 className="text-3xl font-display uppercase tracking-[0.4em]">{plan.name}</h3>
-                  <NeonBadge color="primary" className="tracking-[0.4em] text-xs">{plan.price}</NeonBadge>
+                {plan.featured && (
+                  <div className="text-[10px] uppercase tracking-[0.4em] text-primary font-display text-center -mt-2 -mb-2">
+                    Most Popular
+                  </div>
+                )}
+                <div className="flex items-center justify-between">
+                  <h3 className="text-2xl font-display font-semibold uppercase tracking-[0.35em]">{plan.name}</h3>
+                  <NeonBadge color={plan.badge}>{plan.price}</NeonBadge>
                 </div>
-                <ul className="relative space-y-3 text-muted-foreground text-xl">
+                <ul className="space-y-3 text-muted-foreground text-sm flex-1">
                   {plan.perks.map((perk) => (
                     <li key={perk} className="flex items-center gap-2">
-                      <Star className="w-4 h-4 text-primary drop-shadow-[0_0_5px_rgba(255,0,153,0.5)]" />
+                      <Star className="w-3.5 h-3.5 text-primary shrink-0 drop-shadow-[0_0_5px_rgba(255,0,153,0.5)]" />
                       <span className="tracking-wide">{perk}</span>
                     </li>
                   ))}
                 </ul>
-                <Button className="relative mt-4 w-full h-14 rounded-2xl border-2 border-white/15 bg-gradient-to-r from-primary to-accent text-black font-display text-lg tracking-[0.35em] uppercase shadow-[0_10px_35px_rgba(255,0,153,0.35)]">
+                <Button className="w-full h-12 rounded-2xl bg-gradient-to-r from-primary to-accent text-black font-display font-semibold uppercase tracking-[0.35em] shadow-[0_10px_35px_rgba(255,0,153,0.3)] hover:shadow-[0_10px_45px_rgba(255,0,153,0.5)] transition-all">
                   Select Plan
                 </Button>
               </CyberCard>
@@ -232,9 +295,8 @@ export default function AuthPage() {
       {/* Blog Preview */}
       <section id="blogs" className="py-28 px-6 lg:px-16 bg-background">
         <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-end mb-12">
+          <div className="mb-12">
             <SectionHeading title="Battlelog Stories" subtitle="Tactics, highlights, and pro tips" />
-            <Button variant="ghost" onClick={() => { window.location.href = "/blogs"; }} className="text-primary text-[10px] tracking-widest uppercase font-display shrink-0">Read More</Button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
@@ -257,30 +319,28 @@ export default function AuthPage() {
 
       {/* About & Contact */}
       <section id="about" className="py-28 px-6 lg:px-16 bg-card border-y border-white/5">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10">
-          {/* About card */}
-          <CyberCard className="p-8 space-y-5 rounded-3xl border-white/10 bg-black/40">
-            <NeonBadge color="primary">About Us</NeonBadge>
-            <h3 className="text-4xl font-display font-semibold uppercase tracking-widest leading-tight">Built For Champions</h3>
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-12"><SectionHeading title="Built For Champions" eyebrow="About Us" subtitle="Battleroof is a tactical esports hub for BGMI, Free Fire, and Valorant." /></div>
+          <CyberCard className="p-8 space-y-6 rounded-3xl border-white/10 bg-black/40">
             <p className="text-muted-foreground text-base leading-relaxed">
-              Battleroof is a tactical esports hub for BGMI, Free Fire, and Valorant. We run daily missions, coach-led scrims, and
-              community-driven leagues that keep every operative sharp.
+              We run daily missions, coach-led scrims, and community-driven leagues that keep every operative sharp and climbing the ranks.
             </p>
-            <div className="grid grid-cols-2 gap-6 pt-4">
-              <div>
-                <p className="text-4xl font-display font-semibold text-primary">120+</p>
-                <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground mt-1">Weekly Events</p>
-              </div>
-              <div>
-                <p className="text-4xl font-display font-semibold text-primary">24/7</p>
-                <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground mt-1">Matchmaking</p>
-              </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 pt-2">
+              {[{ val: "50K+", label: "Operatives" }, { val: "120+", label: "Weekly Events" }, { val: "24/7", label: "Matchmaking" }, { val: "₹500K+", label: "Awarded" }].map(s => (
+                <div key={s.label}>
+                  <p className="text-4xl font-display font-semibold text-primary">{s.val}</p>
+                  <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground mt-1">{s.label}</p>
+                </div>
+              ))}
             </div>
           </CyberCard>
-          {/* Contact card */}
-          <CyberCard className="p-8 space-y-5 rounded-3xl border-white/10 bg-black/40" id="contact">
-            <NeonBadge color="accent">Contact Us</NeonBadge>
-            <h3 className="text-4xl font-display font-semibold uppercase tracking-widest leading-tight">Signal HQ</h3>
+        </div>
+      </section>
+
+      <section id="contact" className="py-28 px-6 lg:px-16 bg-background border-b border-white/5">
+        <div className="max-w-2xl mx-auto">
+          <div className="mb-12"><SectionHeading title="Signal HQ" eyebrow="Contact Us" subtitle="Drop a transmission and our team will respond within 24 hours." /></div>
+          <CyberCard className="p-8 space-y-5 rounded-3xl border-white/10 bg-black/40">
             <form className="space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="contact-name" className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Name</Label>
@@ -310,10 +370,11 @@ export default function AuthPage() {
             <span className="font-display font-bold text-xl tracking-widest uppercase">{settings?.appName || "BATTLEROOF"}</span>
           </div>
           <div className="flex gap-8 text-[10px] uppercase tracking-widest text-muted-foreground font-display">
-            <a href="/about" className="hover:text-white transition-colors">About</a>
-            <a href="/blogs" className="hover:text-white transition-colors">Blogs</a>
-            <a href="/plans" className="hover:text-white transition-colors">Plans</a>
-            <a href="/contact" className="hover:text-white transition-colors">Contact</a>
+            <a href="#about" className="hover:text-white transition-colors">About</a>
+            <a href="#leaderboard" className="hover:text-white transition-colors">Leaderboard</a>
+            <a href="#blogs" className="hover:text-white transition-colors">Blogs</a>
+            <a href="#plans" className="hover:text-white transition-colors">Plans</a>
+            <a href="#contact" className="hover:text-white transition-colors">Contact</a>
           </div>
           <p className="text-[10px] text-muted-foreground uppercase tracking-widest">© 2026 NEXUS SYSTEMS. ALL RIGHTS RESERVED.</p>
         </div>
