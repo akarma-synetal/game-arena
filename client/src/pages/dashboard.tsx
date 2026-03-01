@@ -7,6 +7,7 @@ import { Trophy, Crosshair, Target, Zap, Clock, Shield, Star, Rocket } from "luc
 import { format } from "date-fns";
 import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 
 const mockEloData = [
   { name: 'W1', elo: 1000 },
