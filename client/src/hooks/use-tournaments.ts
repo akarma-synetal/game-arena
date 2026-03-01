@@ -1,29 +1,40 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl } from "@shared/routes";
+import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 export function useTournaments() {
   return useQuery({
     queryKey: [api.tournaments.list.path],
     queryFn: async () => {
-      const res = await fetch(api.tournaments.list.path, { credentials: "include" });
+      const res = await fetch(api.tournaments.list.path);
       if (!res.ok) throw new Error("Failed to fetch tournaments");
-      return api.tournaments.list.responses[200].parse(await res.json());
-    },
+      return await res.json();
+    }
   });
 }
 
 export function useTournament(id: number) {
   return useQuery({
-    queryKey: [api.tournaments.get.path, id],
+    queryKey: [buildUrl(api.tournaments.get.path, { id })],
     queryFn: async () => {
-      const url = buildUrl(api.tournaments.get.path, { id });
-      const res = await fetch(url, { credentials: "include" });
-      if (res.status === 404) return null;
+      const res = await fetch(buildUrl(api.tournaments.get.path, { id }));
       if (!res.ok) throw new Error("Failed to fetch tournament");
-      return api.tournaments.get.responses[200].parse(await res.json());
+      return await res.json();
     },
-    enabled: !!id,
+    enabled: !!id
+  });
+}
+
+export function useCreateTournament() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: async (data: any) => await apiRequest("POST", api.tournaments.create.path, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.tournaments.list.path] });
+      toast({ title: "Tournament Created" });
+    }
   });
 }
 
@@ -32,35 +43,17 @@ export function useRegisterTournament(tournamentId: number) {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ teamId }: { teamId: number }) => {
+    mutationFn: async (data: { teamId: number }) => {
       const url = buildUrl(api.tournaments.register.path, { id: tournamentId });
-      const res = await fetch(url, {
-        method: api.tournaments.register.method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ teamId }),
-        credentials: "include",
-      });
-      
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Registration failed");
-      }
-      return api.tournaments.register.responses[200].parse(await res.json());
+      const res = await apiRequest("POST", url, data);
+      return res;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.tournaments.list.path] });
-      queryClient.invalidateQueries({ queryKey: [api.tournaments.get.path, tournamentId] });
-      toast({
-        title: "Registration Successful",
-        description: "Your team has been entered into the tournament.",
-      });
+      toast({ title: "Registered!", description: "Your squad is deployed." });
     },
-    onError: (error) => {
-      toast({
-        title: "Registration Failed",
-        description: error.message,
-        variant: "destructive",
-      });
+    onError: (error: Error) => {
+      toast({ title: "Failed to register", description: error.message, variant: "destructive" });
     }
   });
 }

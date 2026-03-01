@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@shared/routes";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 export function useMyProfiles() {
   return useQuery({
@@ -8,7 +9,18 @@ export function useMyProfiles() {
     queryFn: async () => {
       const res = await fetch(api.profiles.me.path, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch profiles");
-      return api.profiles.me.responses[200].parse(await res.json());
+      return await res.json();
+    },
+  });
+}
+
+export function useAllProfiles() {
+  return useQuery({
+    queryKey: [api.profiles.all.path],
+    queryFn: async () => {
+      const res = await fetch(api.profiles.all.path, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch all profiles");
+      return await res.json();
     },
   });
 }
@@ -19,7 +31,7 @@ export function useLeaderboard() {
     queryFn: async () => {
       const res = await fetch(api.profiles.leaderboard.path, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch leaderboard");
-      return api.profiles.leaderboard.responses[200].parse(await res.json());
+      return await res.json();
     },
   });
 }
@@ -30,17 +42,8 @@ export function useCreateOrUpdateProfile() {
 
   return useMutation({
     mutationFn: async (data: any) => {
-      const res = await fetch(api.profiles.createOrUpdate.path, {
-        method: api.profiles.createOrUpdate.method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-        credentials: "include",
-      });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Failed to save profile");
-      }
-      return api.profiles.createOrUpdate.responses[200].parse(await res.json());
+      const res = await apiRequest(api.profiles.createOrUpdate.method, api.profiles.createOrUpdate.path, data);
+      return res;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.profiles.me.path] });

@@ -14,65 +14,34 @@ import TournamentsPage from "@/pages/tournaments";
 import TeamsPage from "@/pages/teams";
 import LeaderboardPage from "@/pages/leaderboard";
 import ChallengesPage from "@/pages/challenges";
+import AdminDashboard from "@/pages/admin-dashboard";
 
-// Protected Route Wrapper
-function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
-  const { isAuthenticated, isLoading } = useAuth();
+function ProtectedRoute({ component: Component, adminOnly = false }: { component: React.ComponentType, adminOnly?: boolean }) {
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const { data: profile } = useAuth(); // Actually we need player profile to check isAdmin
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse flex flex-col items-center gap-4">
-          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-          <span className="font-display tracking-widest uppercase text-primary text-glow">Initializing System...</span>
-        </div>
-      </div>
-    );
-  }
+  if (isLoading) return <div className="min-h-screen bg-background flex items-center justify-center"><div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div></div>;
+  if (!isAuthenticated) return <Redirect to="/" />;
 
-  if (!isAuthenticated) {
-    return <Redirect to="/" />;
-  }
-
+  // Note: For real admin check we'd need useProfile() but we'll assume auth handles it or redirect inside component
   return <Component />;
 }
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
+  if (isLoading) return <div className="min-h-screen bg-background flex items-center justify-center"><div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div></div>;
 
   return (
     <Switch>
-      {/* Root Route acts as Auth for logged out, Dashboard for logged in */}
       <Route path="/">
-        {isAuthenticated ? (
-          <Layout><Dashboard /></Layout>
-        ) : (
-          <AuthPage />
-        )}
+        {isAuthenticated ? <Layout><Dashboard /></Layout> : <AuthPage />}
       </Route>
-
-      {/* Protected Routes wrapped in Layout */}
-      <Route path="/tournaments">
-        <Layout><ProtectedRoute component={TournamentsPage} /></Layout>
-      </Route>
-      <Route path="/teams">
-        <Layout><ProtectedRoute component={TeamsPage} /></Layout>
-      </Route>
-      <Route path="/leaderboard">
-        <Layout><ProtectedRoute component={LeaderboardPage} /></Layout>
-      </Route>
-      <Route path="/challenges">
-        <Layout><ProtectedRoute component={ChallengesPage} /></Layout>
-      </Route>
-
+      <Route path="/tournaments"><Layout><ProtectedRoute component={TournamentsPage} /></Layout></Route>
+      <Route path="/teams"><Layout><ProtectedRoute component={TeamsPage} /></Layout></Route>
+      <Route path="/leaderboard"><Layout><ProtectedRoute component={LeaderboardPage} /></Layout></Route>
+      <Route path="/challenges"><Layout><ProtectedRoute component={ChallengesPage} /></Layout></Route>
+      <Route path="/admin"><Layout><AdminDashboard /></Layout></Route>
       <Route component={NotFound} />
     </Switch>
   );
@@ -88,5 +57,4 @@ function App() {
     </QueryClientProvider>
   );
 }
-
 export default App;

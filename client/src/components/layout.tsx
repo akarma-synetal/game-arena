@@ -1,6 +1,8 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@shared/routes";
 import { 
   Gamepad2, 
   Trophy, 
@@ -9,7 +11,9 @@ import {
   LogOut, 
   Menu, 
   LayoutDashboard,
-  Bell
+  Bell,
+  ShieldAlert,
+  Gift
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -25,14 +29,20 @@ function cn(...inputs: ClassValue[]) {
 export function Layout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const [location] = useLocation();
+  const { data: settings } = useQuery({ queryKey: [api.settings.get.path] });
+  const { data: profile } = useQuery({ queryKey: [api.profiles.me.path] });
 
   const navItems = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
     { href: "/tournaments", label: "Tournaments", icon: Trophy },
-    { href: "/teams", label: "Teams", icon: Users },
+    { href: "/teams", label: "Squads", icon: Users },
     { href: "/leaderboard", label: "Leaderboard", icon: Gamepad2 },
     { href: "/challenges", label: "Challenges", icon: Swords },
   ];
+
+  if (profile?.isAdmin) {
+    navItems.push({ href: "/admin", label: "Command", icon: ShieldAlert });
+  }
 
   const NavLinks = ({ onClick }: { onClick?: () => void }) => (
     <div className="flex flex-col gap-2 w-full mt-8">
@@ -61,8 +71,6 @@ export function Layout({ children }: { children: ReactNode }) {
               )}
               <item.icon className={cn("w-5 h-5", isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
               {item.label}
-              
-              {/* Subtle hover gradient */}
               <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             </Button>
           </Link>
@@ -79,7 +87,7 @@ export function Layout({ children }: { children: ReactNode }) {
           <div className="w-8 h-8 rounded bg-primary flex items-center justify-center box-glow">
             <Swords className="w-5 h-5 text-black" />
           </div>
-          <span className="font-display font-bold text-xl tracking-widest text-glow">NEXUS</span>
+          <span className="font-display font-bold text-xl tracking-widest text-glow">{settings?.appName || "BATTLEROOF"}</span>
         </div>
         <Sheet>
           <SheetTrigger asChild>
@@ -92,11 +100,11 @@ export function Layout({ children }: { children: ReactNode }) {
               <div className="w-10 h-10 rounded bg-primary flex items-center justify-center box-glow">
                 <Swords className="w-6 h-6 text-black" />
               </div>
-              <span className="font-display font-bold text-2xl tracking-widest text-glow">NEXUS</span>
+              <span className="font-display font-bold text-2xl tracking-widest text-glow">{settings?.appName || "BATTLEROOF"}</span>
             </div>
             <NavLinks />
             <div className="mt-auto">
-              <Button onClick={() => logout()} variant="outline" className="w-full gap-2 border-white/10 hover:bg-destructive/20 hover:text-destructive hover:border-destructive/50 transition-all">
+              <Button onClick={() => logout()} variant="outline" className="w-full gap-2 border-white/10 hover:bg-destructive/20 hover:text-destructive hover:border-destructive/50 transition-all font-display uppercase tracking-widest text-xs">
                 <LogOut className="w-4 h-4" /> Sign Out
               </Button>
             </div>
@@ -111,8 +119,8 @@ export function Layout({ children }: { children: ReactNode }) {
             <Swords className="w-7 h-7 text-white" />
           </div>
           <div>
-            <h1 className="font-display font-bold text-3xl tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70">NEXUS</h1>
-            <p className="text-[10px] text-primary uppercase tracking-[0.2em] font-semibold">Tournament Hub</p>
+            <h1 className="font-display font-bold text-3xl tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70 uppercase">{settings?.appName || "BATTLEROOF"}</h1>
+            <p className="text-[10px] text-primary uppercase tracking-[0.2em] font-semibold">Elite Platform</p>
           </div>
         </div>
         
@@ -126,8 +134,8 @@ export function Layout({ children }: { children: ReactNode }) {
                 <AvatarFallback className="bg-muted text-primary">{user.firstName?.charAt(0) || "U"}</AvatarFallback>
               </Avatar>
               <div className="flex flex-col truncate">
-                <span className="font-medium text-sm truncate">{user.firstName} {user.lastName}</span>
-                <span className="text-xs text-muted-foreground truncate">{user.email}</span>
+                <span className="font-medium text-sm truncate uppercase tracking-tight font-display">{user.firstName}</span>
+                <span className="text-[10px] text-muted-foreground truncate uppercase tracking-widest">{profile?.subscriptionTier || "Free"}</span>
               </div>
             </div>
             <Button variant="ghost" size="icon" onClick={() => logout()} className="shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10">
@@ -139,15 +147,14 @@ export function Layout({ children }: { children: ReactNode }) {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-[calc(100vh-73px)] md:h-screen overflow-hidden relative">
-        {/* Top bar for desktop */}
         <header className="hidden md:flex h-20 items-center justify-end px-8 border-b border-white/5 bg-background/50 backdrop-blur-sm z-10">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" className="relative rounded-full hover:bg-primary/20 hover:text-primary transition-colors">
               <Bell className="w-5 h-5" />
               <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary box-glow"></span>
             </Button>
-            <Button className="bg-primary/10 text-primary border border-primary/30 hover:bg-primary hover:text-white transition-all duration-300 font-display uppercase tracking-wide">
-              Create Match
+            <Button className="bg-primary/10 text-primary border border-primary/30 hover:bg-primary hover:text-white transition-all duration-300 font-display uppercase tracking-wide px-6">
+              Instant Match
             </Button>
           </div>
         </header>
