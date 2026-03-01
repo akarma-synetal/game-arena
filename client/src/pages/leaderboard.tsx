@@ -1,10 +1,20 @@
 import { useLeaderboard } from "@/hooks/use-profiles";
 import { CyberCard, NeonBadge } from "@/components/ui-extras";
 import { Trophy, Medal, Crown } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export default function LeaderboardPage() {
-  const { data: profiles, isLoading } = useLeaderboard();
+  const { data: profiles, isLoading, isError } = useLeaderboard();
+
+  const fallbackProfiles = [
+    { id: 1, inGameName: "ShadowReaper", elo: 1880, winnings: 12400, game: { name: "BGMI" } },
+    { id: 2, inGameName: "NovaStrike", elo: 1765, winnings: 9800, game: { name: "Valorant" } },
+    { id: 3, inGameName: "RoguePulse", elo: 1680, winnings: 7600, game: { name: "Free Fire" } },
+    { id: 4, inGameName: "EchoViper", elo: 1605, winnings: 5200, game: { name: "BGMI" } },
+    { id: 5, inGameName: "IronFang", elo: 1540, winnings: 4100, game: { name: "Valorant" } },
+  ];
+
+  const displayProfiles = profiles && profiles.length > 0 ? profiles : fallbackProfiles;
 
   const getRankIcon = (index: number) => {
     switch(index) {
@@ -39,7 +49,7 @@ export default function LeaderboardPage() {
             <tbody>
               {isLoading ? (
                 <tr><td colSpan={5} className="p-8 text-center text-muted-foreground animate-pulse">Computing standings...</td></tr>
-              ) : profiles?.map((p: any, i: number) => (
+              ) : displayProfiles.map((p: any, i: number) => (
                 <tr key={p.id} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
                   <td className="p-4 text-center">
                     <div className="flex justify-center">{getRankIcon(i)}</div>
@@ -63,8 +73,8 @@ export default function LeaderboardPage() {
                   </td>
                 </tr>
               ))}
-              {(!profiles || profiles.length === 0) && !isLoading && (
-                <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">Database empty. No ranked players found.</td></tr>
+              {(isError || (!profiles || profiles.length === 0)) && !isLoading && (
+                <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">Showing demo standings.</td></tr>
               )}
             </tbody>
           </table>

@@ -198,14 +198,17 @@ export async function setupAuth(app: Express) {
       return res.json({ ok: true });
     });
 
-    app.post("/api/logout", (req, res) => {
+    const handleLocalLogout = (req: any, res: any) => {
       const sessionData = req.session as any;
       if (sessionData) {
         sessionData.localUserId = null;
         sessionData.localRole = null;
       }
       res.json({ ok: true });
-    });
+    };
+
+    app.post("/api/logout", handleLocalLogout);
+    app.get("/api/logout", handleLocalLogout);
 
     return;
   }

@@ -2,6 +2,8 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { db, pool } from "./db";
 
 const app = express();
 const httpServer = createServer(app);
@@ -60,6 +62,16 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Run database migrations
+  try {
+    log("Running database migrations...", "migrations");
+    await migrate(db, { migrationsFolder: "./migrations" });
+    log("Migrations completed successfully", "migrations");
+  } catch (error) {
+    console.error("Migration failed:", error);
+    process.exit(1);
+  }
+
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {

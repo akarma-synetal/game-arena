@@ -36,7 +36,7 @@ export function Layout({ children }: { children: ReactNode }) {
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
     { href: "/tournaments", label: "Tournaments", icon: Trophy },
     { href: "/teams", label: "Squads", icon: Users },
-    { href: "/leaderboard", label: "Leaderboard", icon: Gamepad2 },
+    { href: "/dashboard/leaderboard", label: "Leaderboard", icon: Gamepad2 },
     { href: "/challenges", label: "Challenges", icon: Swords },
   ];
 

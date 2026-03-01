@@ -2,6 +2,47 @@ import { ReactNode } from "react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+/** Full-page background: dim image + gradient vignette */
+export function PageBg({ image }: { image?: string }) {
+  return (
+    <>
+      {image && (
+        <div
+          className="fixed inset-0 -z-20 bg-cover bg-center opacity-[0.07]"
+          style={{ backgroundImage: `url('${image}')` }}
+        />
+      )}
+      <div className="fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_rgba(255,0,153,0.18),_transparent_55%)]" />
+      <div className="fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_bottom_right,_rgba(120,0,255,0.12),_transparent_55%)]" />
+    </>
+  );
+}
+
+/** Section header used in landing + public pages */
+export function SectionHeading({
+  eyebrow,
+  title,
+  subtitle,
+}: {
+  eyebrow?: string;
+  title: string;
+  subtitle?: string;
+}) {
+  return (
+    <div>
+      {eyebrow && (
+        <p className="text-[11px] uppercase tracking-[0.4em] text-primary font-display mb-2">{eyebrow}</p>
+      )}
+      <h2 className="text-5xl lg:text-6xl font-display font-semibold uppercase tracking-widest text-glow leading-tight">
+        {title}
+      </h2>
+      {subtitle && (
+        <p className="text-muted-foreground mt-3 uppercase text-sm tracking-[0.4em]">{subtitle}</p>
+      )}
+    </div>
+  );
+}
+
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }

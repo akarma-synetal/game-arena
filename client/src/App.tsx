@@ -12,6 +12,11 @@ import { Layout } from "@/components/layout";
 import AuthPage from "@/pages/auth";
 import PlayerAuthPage from "@/pages/player-auth";
 import AdminLogin from "@/pages/admin-login";
+import BlogsPage from "@/pages/blogs";
+import PlansPage from "@/pages/plans";
+import AboutPage from "@/pages/about";
+import ContactPage from "@/pages/contact";
+import LeaderboardPublicPage from "@/pages/leaderboard-public";
 import Dashboard from "@/pages/dashboard";
 import TournamentsPage from "@/pages/tournaments";
 import TeamsPage from "@/pages/teams";
@@ -63,9 +68,14 @@ function Router() {
       <Route path="/dashboard"><Layout><ProtectedRoute component={Dashboard} /></Layout></Route>
       <Route path="/login"><PlayerAuthPage mode="login" /></Route>
       <Route path="/register"><PlayerAuthPage mode="register" /></Route>
+      <Route path="/blogs"><BlogsPage /></Route>
+      <Route path="/plans"><PlansPage /></Route>
+      <Route path="/about"><AboutPage /></Route>
+      <Route path="/contact"><ContactPage /></Route>
+      <Route path="/leaderboard"><LeaderboardPublicPage /></Route>
       <Route path="/tournaments"><Layout><ProtectedRoute component={TournamentsPage} /></Layout></Route>
       <Route path="/teams"><Layout><ProtectedRoute component={TeamsPage} /></Layout></Route>
-      <Route path="/leaderboard"><Layout><ProtectedRoute component={LeaderboardPage} /></Layout></Route>
+      <Route path="/dashboard/leaderboard"><Layout><ProtectedRoute component={LeaderboardPage} /></Layout></Route>
       <Route path="/challenges"><Layout><ProtectedRoute component={ChallengesPage} /></Layout></Route>
       <Route path="/admin"><AdminRoute /></Route>
       <Route component={NotFound} />
