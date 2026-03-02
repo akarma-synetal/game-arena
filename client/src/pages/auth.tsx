@@ -1,9 +1,10 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { motion } from "framer-motion";
-import { Swords, Trophy, Users, ShieldCheck, Zap, Newspaper, MessageSquare, Star, Crown, Medal } from "lucide-react";
+import { Swords, Trophy, Users, ShieldCheck, Zap, Newspaper, MessageSquare, Star, Crown, Medal, Building2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@shared/routes";
 import { CyberCard, NeonBadge, SectionHeading, PageBg } from "@/components/ui-extras";
@@ -11,6 +12,7 @@ import { useLeaderboard } from "@/hooks/use-profiles";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export default function AuthPage() {
+  const [partnerRequested, setPartnerRequested] = useState(false);
   const { data: settings } = useQuery({ queryKey: [api.settings.get.path] });
   const { data: tournaments } = useQuery({ queryKey: [api.tournaments.list.path] });
   const { data: leaderboardProfiles, isLoading: lbLoading } = useLeaderboard();
@@ -29,6 +31,12 @@ export default function AuthPage() {
     return <span className="font-display font-bold text-muted-foreground">{i + 1}</span>;
   };
 
+  const hostingPartners = [
+    { name: "Phoenix Esports Hub", city: "Mumbai", rating: 4.9, hosted: 182 },
+    { name: "Delta Arena Network", city: "Bengaluru", rating: 4.8, hosted: 149 },
+    { name: "Warzone Community", city: "Delhi", rating: 4.7, hosted: 131 },
+  ];
+
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/30 scroll-smooth">
       <PageBg image="/images/bgmi.png" />
@@ -43,22 +51,23 @@ export default function AuthPage() {
         <div className="hidden lg:flex items-center gap-8 uppercase text-xs md:text-sm tracking-[0.4em] font-display font-semibold text-muted-foreground">
           <a href="#hero" className="hover:text-primary transition-colors">Home</a>
           <a href="#leaderboard" className="hover:text-primary transition-colors">Leaderboard</a>
+          <a href="#partners" className="hover:text-primary transition-colors">Partner</a>
           <a href="#blogs" className="hover:text-primary transition-colors">Blogs</a>
           <a href="#plans" className="hover:text-primary transition-colors">Plans</a>
           <a href="#about" className="hover:text-primary transition-colors">About</a>
           <a href="#contact" className="hover:text-primary transition-colors">Contact</a>
           <Button
-            onClick={() => { window.location.href = "/login"; }}
+            onClick={() => { window.location.href = "/player"; }}
             variant="ghost"
             className="h-11 px-8 rounded-2xl border-2 border-primary/70 text-primary hover:bg-primary/10 tracking-[0.4em]"
           >
-            Login
+            Player
           </Button>
           <Button
-            onClick={() => { window.location.href = "/register"; }}
+            onClick={() => { window.location.href = "/partner"; }}
             className="h-11 px-8 rounded-2xl bg-gradient-to-r from-primary to-accent text-black font-semibold tracking-[0.4em] shadow-[0_0_25px_rgba(255,0,153,0.45)]"
           >
-            Register
+            Partner
           </Button>
         </div>
       </nav>
@@ -95,7 +104,7 @@ export default function AuthPage() {
               </Button>
               <Button
                 variant="ghost"
-                onClick={() => { window.location.href = "/leaderboard"; }}
+                onClick={() => { window.location.href = "#leaderboard"; }}
                 className="h-16 px-12 text-base uppercase tracking-widest font-display text-muted-foreground hover:text-white"
               >
                 View Leaderboards
@@ -159,6 +168,78 @@ export default function AuthPage() {
         </div>
       </section>
 
+      {/* Partners */}
+      <section id="partners" className="py-28 px-6 lg:px-16 bg-background border-b border-white/5">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10">
+          <div>
+            <div className="mb-10">
+              <SectionHeading
+                eyebrow="Partner Network"
+                title="Become a Hosting Partner"
+                subtitle="Join our verified network to host events, run scrims, and earn through community tournaments."
+              />
+            </div>
+            <div className="space-y-4">
+              {hostingPartners.map((partner) => (
+                <CyberCard key={partner.name} className="p-5 rounded-2xl border-white/10 bg-black/40">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="font-display text-xl uppercase tracking-[0.2em]">{partner.name}</p>
+                      <p className="text-sm text-muted-foreground mt-1">{partner.city} • {partner.hosted} Tournaments Hosted</p>
+                    </div>
+                    <div className="flex items-center gap-1 text-primary">
+                      {[1, 2, 3, 4, 5].map((idx) => (
+                        <Star key={idx} className={`w-4 h-4 ${idx <= Math.round(partner.rating) ? "fill-current" : "opacity-30"}`} />
+                      ))}
+                      <span className="ml-1 text-sm text-white">{partner.rating}</span>
+                    </div>
+                  </div>
+                </CyberCard>
+              ))}
+            </div>
+          </div>
+
+          <CyberCard className="p-8 rounded-3xl border-white/10 bg-black/40 space-y-5">
+            <NeonBadge color="primary">Partner Request</NeonBadge>
+            <h3 className="text-3xl font-display font-semibold uppercase tracking-widest">Request to Partner</h3>
+            <form
+              className="space-y-4"
+              onSubmit={(event) => {
+                event.preventDefault();
+                setPartnerRequested(true);
+              }}
+            >
+              <div className="space-y-1.5">
+                <Label htmlFor="partner-name" className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Full Name</Label>
+                <Input id="partner-name" required placeholder="Your Name" className="h-11 bg-white/5 border-white/10 rounded-xl focus:border-primary/60" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="partner-org" className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Organization</Label>
+                <Input id="partner-org" required placeholder="Org / Community Name" className="h-11 bg-white/5 border-white/10 rounded-xl focus:border-primary/60" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="partner-email" className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Email</Label>
+                  <Input id="partner-email" type="email" required placeholder="you@org.com" className="h-11 bg-white/5 border-white/10 rounded-xl focus:border-primary/60" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="partner-city" className="text-xs uppercase tracking-[0.3em] text-muted-foreground">City</Label>
+                  <Input id="partner-city" required placeholder="City" className="h-11 bg-white/5 border-white/10 rounded-xl focus:border-primary/60" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="partner-note" className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Why partner with us?</Label>
+                <Textarea id="partner-note" rows={4} required placeholder="Tell us about your hosting capacity and community reach..." className="bg-white/5 border-white/10 rounded-xl focus:border-primary/60 resize-none" />
+              </div>
+              {partnerRequested && <p className="text-sm text-primary">Request submitted. Our team will contact you shortly.</p>}
+              <Button type="submit" className="w-full h-12 rounded-2xl bg-gradient-to-r from-primary to-accent text-black font-semibold tracking-widest">
+                <Building2 className="w-4 h-4 mr-2" /> Submit Request
+              </Button>
+            </form>
+          </CyberCard>
+        </div>
+      </section>
+
       {/* Daily Tournaments Preview */}
       <section id="tournaments" className="py-28 px-6 lg:px-16 bg-background relative">
         <div className="max-w-7xl mx-auto">
@@ -189,7 +270,7 @@ export default function AuthPage() {
                       <span>Entry</span>
                       <span className="text-white">Authorized Members Only</span>
                    </div>
-                   <Button onClick={() => { window.location.href = "/login"; }} className="w-full h-12 bg-white/5 hover:bg-primary hover:text-black border border-white/10 hover:border-transparent transition-all uppercase font-display tracking-widest text-[10px]">Access Briefing</Button>
+                   <Button onClick={() => { window.location.href = "/player"; }} className="w-full h-12 bg-white/5 hover:bg-primary hover:text-black border border-white/10 hover:border-transparent transition-all uppercase font-display tracking-widest text-[10px]">Access Briefing</Button>
                 </div>
               </CyberCard>
             ))}
@@ -372,6 +453,7 @@ export default function AuthPage() {
           <div className="flex gap-8 text-[10px] uppercase tracking-widest text-muted-foreground font-display">
             <a href="#about" className="hover:text-white transition-colors">About</a>
             <a href="#leaderboard" className="hover:text-white transition-colors">Leaderboard</a>
+            <a href="#partners" className="hover:text-white transition-colors">Partner</a>
             <a href="#blogs" className="hover:text-white transition-colors">Blogs</a>
             <a href="#plans" className="hover:text-white transition-colors">Plans</a>
             <a href="#contact" className="hover:text-white transition-colors">Contact</a>

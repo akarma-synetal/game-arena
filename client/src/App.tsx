@@ -25,7 +25,7 @@ function ProtectedRoute({ component: Component, adminOnly = false }: { component
   const { data: profile, isLoading: profileLoading } = useMyProfiles();
 
   if (isLoading || profileLoading) return <div className="min-h-screen bg-background flex items-center justify-center"><div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div></div>;
-  if (!isAuthenticated) return <Redirect to="/login" />;
+  if (!isAuthenticated) return <Redirect to="/player" />;
 
   if (adminOnly && !profile?.isAdmin) return <Redirect to="/dashboard" />;
 
@@ -62,7 +62,9 @@ function Router() {
         {isAuthenticated ? <Layout><Dashboard /></Layout> : <AuthPage />}
       </Route>
       <Route path="/dashboard"><Layout><ProtectedRoute component={Dashboard} /></Layout></Route>
-      <Route path="/login"><PlayerAuthPage mode="login" /></Route>
+      <Route path="/player"><PlayerAuthPage mode="login" /></Route>
+      <Route path="/partner"><PlayerAuthPage mode="partner" /></Route>
+      <Route path="/login"><Redirect to="/player" /></Route>
       <Route path="/register"><PlayerAuthPage mode="register" /></Route>
       <Route path="/tournaments"><Layout><ProtectedRoute component={TournamentsPage} /></Layout></Route>
       <Route path="/teams"><Layout><ProtectedRoute component={TeamsPage} /></Layout></Route>

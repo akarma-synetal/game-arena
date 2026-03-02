@@ -33,22 +33,23 @@ export default function PublicShell({
         <div className="hidden lg:flex items-center gap-8 uppercase text-xs md:text-sm tracking-[0.4em] font-display font-semibold text-muted-foreground">
           <a href="/" className="hover:text-primary transition-colors">Home</a>
           <a href="/#leaderboard" className="hover:text-primary transition-colors">Leaderboard</a>
+          <a href="/#partners" className="hover:text-primary transition-colors">Partner</a>
           <a href="/#blogs" className="hover:text-primary transition-colors">Blogs</a>
           <a href="/#plans" className="hover:text-primary transition-colors">Plans</a>
           <a href="/#about" className="hover:text-primary transition-colors">About</a>
           <a href="/#contact" className="hover:text-primary transition-colors">Contact</a>
           <Button
-            onClick={() => { window.location.href = "/login"; }}
+            onClick={() => { window.location.href = "/player"; }}
             variant="ghost"
             className="h-11 px-8 rounded-2xl border-2 border-primary/70 text-primary hover:bg-primary/10 tracking-[0.4em]"
           >
-            Login
+            Player
           </Button>
           <Button
-            onClick={() => { window.location.href = "/register"; }}
+            onClick={() => { window.location.href = "/partner"; }}
             className="h-11 px-8 rounded-2xl bg-gradient-to-r from-primary to-accent text-black font-semibold tracking-[0.4em] shadow-[0_0_25px_rgba(255,0,153,0.45)]"
           >
-            Register
+            Partner
           </Button>
         </div>
       </nav>

@@ -92,6 +92,37 @@ async function ensureAdminAccount() {
   });
 }
 
+async function ensurePartnerAccount() {
+  const partnerUsername = "partner";
+  const existing = await db.select().from(localAccounts).where(eq(localAccounts.username, partnerUsername));
+  if (existing.length > 0) return;
+
+  const partnerUserId = "local-partner";
+  await authStorage.upsertUser({
+    id: partnerUserId,
+    email: "partner@local",
+    firstName: "Hosting",
+    lastName: "Partner",
+    profileImageUrl: null,
+  });
+
+  await db.insert(localAccounts).values({
+    userId: partnerUserId,
+    username: partnerUsername,
+    passwordHash: hashPassword("partner"),
+    role: "partner",
+  });
+
+  await storage.upsertPlayerProfile(partnerUserId, {
+    inGameName: "Hosting Partner",
+    gameId: 1,
+    rank: "Bronze",
+    level: 1,
+    matchesPlayed: 0,
+    subscriptionTier: "free",
+  });
+}
+
 export async function setupAuth(app: Express) {
   app.set("trust proxy", 1);
   app.use(getSession());
@@ -101,6 +132,7 @@ export async function setupAuth(app: Express) {
   const isLocalAuth = process.env.LOCAL_AUTH === "true";
   if (isLocalAuth) {
     await ensureAdminAccount();
+    await ensurePartnerAccount();
 
     app.post("/api/player/register", async (req, res) => {
       const username = String(req.body?.username || "").trim();
@@ -198,6 +230,22 @@ export async function setupAuth(app: Express) {
       return res.json({ ok: true });
     });
 
+    app.post("/api/partner/login", async (req, res) => {
+      const username = String(req.body?.username || "").trim();
+      const password = String(req.body?.password || "");
+
+      const [account] = await db.select().from(localAccounts).where(eq(localAccounts.username, username));
+      if (!account || account.role !== "partner" || account.passwordHash !== hashPassword(password)) {
+        return res.status(401).json({ message: "Invalid partner credentials" });
+      }
+
+      const sessionData = req.session as any;
+      sessionData.localUserId = account.userId;
+      sessionData.localRole = "partner";
+
+      return res.json({ ok: true });
+    });
+
     const handleLocalLogout = (req: any, res: any) => {
       const sessionData = req.session as any;
       if (sessionData) {
@@ -281,12 +329,12 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
   if (process.env.LOCAL_AUTH === "true") {
     const sessionData = (req.session as any) || {};
     if (sessionData.localUserId) {
-      const role = sessionData.localRole === "admin" ? "admin" : "player";
+      const role = sessionData.localRole === "admin" ? "admin" : sessionData.localRole === "partner" ? "partner" : "player";
       req.user = {
         claims: {
           sub: sessionData.localUserId,
           email: `${sessionData.localUserId}@local`,
-          first_name: role === "admin" ? "Admin" : "Player",
+          first_name: role === "admin" ? "Admin" : role === "partner" ? "Partner" : "Player",
           last_name: "Dev",
           profile_image_url: null,
         },
