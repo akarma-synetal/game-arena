@@ -53,7 +53,6 @@ export function Layout({ children }: { children: ReactNode }) {
 
   const navItems = role === "admin"
     ? [
-        { href: "/admin", label: "Command Center", icon: ShieldAlert },
         { href: "/dashboard/leaderboard", label: "Leaderboard", icon: Gamepad2 },
         { href: "/tournaments", label: "Tournaments", icon: Trophy },
         { href: "/teams", label: "Teams", icon: Users },
@@ -112,14 +111,13 @@ export function Layout({ children }: { children: ReactNode }) {
     
     const adminTabs = [
       { id: "overview", label: "Overview", icon: BarChart3 },
-      { id: "settings", label: "Settings", icon: Settings },
       { id: "partners", label: "Partners", icon: Crown },
-      { id: "players", label: "Operatives", icon: Users },
-      { id: "tournaments", label: "Missions", icon: Trophy },
-      { id: "teams", label: "Squads", icon: Shield },
-      { id: "games", label: "Games", icon: Gamepad2 },
-      { id: "leaderboard", label: "Leaderboard", icon: Layers },
-      { id: "roles", label: "Roles", icon: ShieldAlert },
+      { id: "players", label: "Players", icon: Users },
+      { id: "teams", label: "Teams", icon: Shield },
+      { id: "tournaments", label: "Tournaments", icon: Trophy },
+      { id: "leaderboard", label: "Leaderboards", icon: Layers },
+      { id: "subscriptions", label: "Subscription Plans", icon: Gift },
+      { id: "settings", label: "Settings", icon: Settings },
     ];
 
     if (role !== "admin") return null;
@@ -183,7 +181,8 @@ export function Layout({ children }: { children: ReactNode }) {
               </div>
               <span className="font-display font-bold text-2xl tracking-widest text-glow">{settings?.appName || "BATTLEROOF"}</span>
             </div>
-            <NavLinks />
+            <AdminTabsMenu />
+            {role !== "admin" && <NavLinks />}
             <div className="mt-auto">
               <Button onClick={() => logout()} variant="outline" className="w-full gap-2 border-white/10 hover:bg-destructive/20 hover:text-destructive hover:border-destructive/50 transition-all font-display uppercase tracking-widest text-xs">
                 <LogOut className="w-4 h-4" /> Sign Out
@@ -268,7 +267,7 @@ export function Layout({ children }: { children: ReactNode }) {
         )}
         
         <AdminTabsMenu />
-        <NavLinks />
+        {role !== "admin" && <NavLinks />}
 
         {user && (
           <div className="mt-auto pt-6 border-t border-white/10 flex items-center justify-between">

@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
-type AdminTab = "overview" | "settings" | "partners" | "players" | "tournaments" | "teams" | "games" | "leaderboard" | "roles";
+type AdminTab = "overview" | "partners" | "players" | "teams" | "tournaments" | "leaderboard" | "subscriptions" | "settings";
 
 interface AdminContextType {
   activeTab: AdminTab;

@@ -3,7 +3,7 @@ import { useAdminTab } from "@/context/AdminContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl } from "@shared/routes";
 import { CyberCard, NeonBadge } from "@/components/ui-extras";
-import { Shield, Plus, Users, Trophy, Settings, Users as UsersIcon, Gamepad, Gift, Info, Crown, Layers } from "lucide-react";
+import { Shield, Plus, Users, Trophy, Settings, Users as UsersIcon, Gamepad, Gift, Info, Crown, Layers, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
@@ -18,6 +18,17 @@ export default function AdminDashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { activeTab, setActiveTab } = useAdminTab();
+
+  const tabTitles: Record<string, string> = {
+    overview: "Overview",
+    partners: "Partners",
+    players: "Players",
+    teams: "Teams",
+    tournaments: "Tournaments",
+    leaderboard: "Leaderboards",
+    subscriptions: "Subscription Plans",
+    settings: "Settings",
+  };
 
   const { data: appSettings } = useQuery({ queryKey: [api.settings.get.path] });
   const { data: allProfiles } = useQuery({ queryKey: [api.profiles.all.path] });
@@ -70,7 +81,7 @@ export default function AdminDashboard() {
     <div className="p-8 space-y-8 max-w-7xl mx-auto">
       <div className="flex justify-between items-center">
         <h1 className="text-4xl font-display font-bold uppercase tracking-widest text-glow">
-          Command Center: {appSettings?.appName || "Battleroof"}
+          {tabTitles[activeTab] || activeTab}
         </h1>
         <NeonBadge color="primary">Admin Level 100</NeonBadge>
       </div>
@@ -228,29 +239,6 @@ export default function AdminDashboard() {
           </CyberCard>
         </TabsContent>
 
-        <TabsContent value="games">
-          <CyberCard className="p-0 overflow-hidden">
-            <Table>
-              <TableHeader className="bg-white/5">
-                <TableRow>
-                  <TableHead className="uppercase text-[10px] tracking-widest">Game</TableHead>
-                  <TableHead className="uppercase text-[10px] tracking-widest">Display Name</TableHead>
-                  <TableHead className="uppercase text-[10px] tracking-widest">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {allGames?.map((game: any) => (
-                  <TableRow key={game.id}>
-                    <TableCell className="uppercase font-display">{game.name}</TableCell>
-                    <TableCell>{game.displayName}</TableCell>
-                    <TableCell><NeonBadge color="primary">Active</NeonBadge></TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CyberCard>
-        </TabsContent>
-
         <TabsContent value="leaderboard">
           <CyberCard className="p-0 overflow-hidden">
             <Table>
@@ -274,19 +262,64 @@ export default function AdminDashboard() {
           </CyberCard>
         </TabsContent>
 
-        <TabsContent value="roles">
+        <TabsContent value="subscriptions">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <CyberCard>
-              <h3 className="font-display uppercase tracking-widest text-sm mb-3">Super Admin</h3>
-              <p className="text-sm text-muted-foreground">Full access to settings, role control, platform moderation, tournaments, teams and players.</p>
+            <CyberCard glowColor="muted">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-lg bg-muted/20 flex items-center justify-center">
+                  <Shield className="w-6 h-6 text-muted-foreground" />
+                </div>
+                <h3 className="font-display uppercase tracking-widest text-xl">Free</h3>
+              </div>
+              <p className="text-3xl font-bold mb-2">$0<span className="text-sm text-muted-foreground">/month</span></p>
+              <ul className="space-y-2 text-sm text-muted-foreground mb-4">
+                <li>• Basic dashboard access</li>
+                <li>• Join public tournaments</li>
+                <li>• View leaderboards</li>
+                <li>• Limited team features</li>
+              </ul>
+              <p className="text-xs text-muted-foreground mt-4">
+                Players: {(allProfiles || []).filter((p: any) => p.subscriptionTier === 'free').length}
+              </p>
             </CyberCard>
-            <CyberCard>
-              <h3 className="font-display uppercase tracking-widest text-sm mb-3">Partner</h3>
-              <p className="text-sm text-muted-foreground">Access to partner dashboard, tournament oversight, follower metrics, ratings and subscription status.</p>
+            <CyberCard glowColor="primary">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center">
+                  <Zap className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="font-display uppercase tracking-widest text-xl text-primary">Pro</h3>
+              </div>
+              <p className="text-3xl font-bold mb-2">$9.99<span className="text-sm text-muted-foreground">/month</span></p>
+              <ul className="space-y-2 text-sm text-muted-foreground mb-4">
+                <li>• All Free features</li>
+                <li>• Priority matchmaking</li>
+                <li>• Create private teams</li>
+                <li>• Advanced statistics</li>
+                <li>• Exclusive tournaments</li>
+              </ul>
+              <p className="text-xs text-muted-foreground mt-4">
+                Players: {(allProfiles || []).filter((p: any) => p.subscriptionTier === 'pro').length}
+              </p>
             </CyberCard>
-            <CyberCard>
-              <h3 className="font-display uppercase tracking-widest text-sm mb-3">Player</h3>
-              <p className="text-sm text-muted-foreground">Access to gameplay dashboard, teams, tournaments, challenges, rankings, winnings and social stats.</p>
+            <CyberCard glowColor="accent">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-lg bg-accent/20 flex items-center justify-center">
+                  <Crown className="w-6 h-6 text-accent" />
+                </div>
+                <h3 className="font-display uppercase tracking-widest text-xl text-accent">Elite</h3>
+              </div>
+              <p className="text-3xl font-bold mb-2">$29.99<span className="text-sm text-muted-foreground">/month</span></p>
+              <ul className="space-y-2 text-sm text-muted-foreground mb-4">
+                <li>• All Pro features</li>
+                <li>• VIP tournament access</li>
+                <li>• Personal coaching sessions</li>
+                <li>• Custom profile badges</li>
+                <li>• Priority support 24/7</li>
+                <li>• Exclusive rewards & skins</li>
+              </ul>
+              <p className="text-xs text-muted-foreground mt-4">
+                Players: {(allProfiles || []).filter((p: any) => p.subscriptionTier === 'elite').length}
+              </p>
             </CyberCard>
           </div>
         </TabsContent>
