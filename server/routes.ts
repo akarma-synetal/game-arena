@@ -5,8 +5,8 @@ import { api } from "@shared/routes";
 import { z } from "zod";
 import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
 import { db } from "./db";
-import { games, tournaments, playerProfiles, teams, teamMembers, users, settings } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { localAccounts } from "@shared/schema";
+import { seedAllDummyData } from "./seed";
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   await setupAuth(app);
@@ -71,32 +71,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.get(api.giveaways.list.path, async (req, res) => res.json(await storage.getGiveaways()));
   app.get(api.admin.users.path, isAdmin, async (req, res) => res.json(await storage.getAllUsers()));
+  app.get("/api/admin/accounts", isAdmin, async (req, res) => res.json(await db.select().from(localAccounts)));
 
-  await seedDatabase();
+  await seedAllDummyData();
   return httpServer;
-}
-
-async function seedDatabase() {
-  const existingGames = await storage.getGames();
-  if (existingGames.length === 0) {
-    const newGames = await db.insert(games).values([
-      { name: "bgmi", displayName: "BGMI", imageUrl: "/images/bgmi.png", bannerUrl: "/images/bgmi.png" },
-      { name: "valorant", displayName: "Valorant", imageUrl: "/images/valorant.png", bannerUrl: "/images/valorant.png" },
-      { name: "freefire", displayName: "Free Fire", imageUrl: "/images/freefire.webp", bannerUrl: "/images/freefire.webp" },
-      { name: "cod", displayName: "COD Mobile", imageUrl: "/images/bgmi.png", bannerUrl: "/images/bgmi.png" }
-    ]).returning();
-
-    const bgmiId = newGames.find(g => g.name === 'bgmi')?.id;
-    const valId = newGames.find(g => g.name === 'valorant')?.id;
-
-    if (bgmiId && valId) {
-      await db.insert(tournaments).values([
-        { name: "Daily BGMI Scrim", gameId: bgmiId, type: "scrim", status: "registration_opened", startDate: new Date(), jackpot: 1000, maxTeams: 20 },
-        { name: "Valorant Open Cup", gameId: valId, type: "tournament", status: "upcoming", startDate: new Date(Date.now() + 86400000), jackpot: 25000, maxTeams: 64, isFeatured: true },
-        { name: "Free Fire Giveaway Cup", gameId: newGames.find(g => g.name === 'freefire')!.id, type: "tournament", status: "registration_opened", startDate: new Date(Date.now() + 172800000), jackpot: 5000, maxTeams: 100 }
-      ]);
-    }
-    
-    await db.insert(settings).values({ appName: "Battleroof" });
-  }
 }

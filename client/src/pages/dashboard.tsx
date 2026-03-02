@@ -12,6 +12,7 @@ import {
   Shield,
   Star,
   Rocket,
+  Users,
 } from "lucide-react";
 import { format } from "date-fns";
 import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer } from "recharts";
@@ -120,7 +121,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Stats & History */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
             <CyberCard glowColor="primary">
               <div className="flex justify-between items-start mb-4">
                 <div className="p-2 bg-primary/10 rounded text-primary border border-primary/20">
@@ -178,6 +179,46 @@ export default function Dashboard() {
               </h3>
               <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">
                 Contract Status
+              </p>
+            </CyberCard>
+
+            <CyberCard glowColor="primary">
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-2 bg-primary/10 rounded text-primary border border-primary/20">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
+                    Social
+                  </p>
+                  <p className="font-bold text-primary">Followers</p>
+                </div>
+              </div>
+              <h3 className="text-3xl font-bold font-display tracking-widest text-glow">
+                {Math.max(100, Math.floor((profile?.elo || 1000) / 4))}
+              </h3>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">
+                Followers
+              </p>
+            </CyberCard>
+
+            <CyberCard glowColor="secondary">
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-2 bg-secondary/10 rounded text-secondary border border-secondary/20">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
+                    Social
+                  </p>
+                  <p className="font-bold text-secondary">Following</p>
+                </div>
+              </div>
+              <h3 className="text-3xl font-bold font-display tracking-widest text-glow-cyan">
+                {Math.max(40, Math.floor((profile?.matchesPlayed || 0) / 3))}
+              </h3>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">
+                Following
               </p>
             </CyberCard>
           </div>

@@ -143,6 +143,12 @@ export async function setupAuth(app: Express) {
         return res.status(400).json({ message: "Username and password required" });
       }
 
+      // Prevent registration with restricted usernames
+      const restrictedUsernames = ["admin", "partner", "mod", "moderator", "administrator", "root", "superuser"];
+      if (restrictedUsernames.includes(username.toLowerCase())) {
+        return res.status(400).json({ message: "Username not allowed" });
+      }
+
       const existing = await db.select().from(localAccounts).where(eq(localAccounts.username, username));
       if (existing.length > 0) {
         return res.status(409).json({ message: "Username already exists" });
@@ -157,6 +163,7 @@ export async function setupAuth(app: Express) {
         profileImageUrl: null,
       });
 
+      // Explicitly enforce player role - no other roles allowed through registration
       await db.insert(localAccounts).values({
         userId,
         username,
@@ -188,8 +195,8 @@ export async function setupAuth(app: Express) {
       }
 
       const [account] = await db.select().from(localAccounts).where(eq(localAccounts.username, username));
-      if (!account || account.passwordHash !== hashPassword(password)) {
-        return res.status(401).json({ message: "Invalid credentials" });
+      if (!account || account.role !== "player" || account.passwordHash !== hashPassword(password)) {
+        return res.status(401).json({ message: "Invalid player credentials" });
       }
 
       const user = await authStorage.getUser(account.userId);

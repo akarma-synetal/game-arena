@@ -14,7 +14,7 @@ export default function LeaderboardPage() {
     { id: 5, inGameName: "IronFang", elo: 1540, winnings: 4100, game: { name: "Valorant" } },
   ];
 
-  const displayProfiles = profiles && profiles.length > 0 ? profiles : fallbackProfiles;
+  const displayProfiles = profiles && profiles.length > 0 ? profiles.slice(0, 5) : fallbackProfiles;
 
   const getRankIcon = (index: number) => {
     switch(index) {
@@ -30,7 +30,7 @@ export default function LeaderboardPage() {
       <div className="flex justify-between items-end border-b border-white/10 pb-4">
         <div>
           <h1 className="text-4xl font-display font-bold uppercase tracking-widest text-glow">Global Rankings</h1>
-          <p className="text-muted-foreground mt-1">Top operatives sorted by combat rating (ELO).</p>
+          <p className="text-muted-foreground mt-1">Top 5 operatives sorted by combat rating (ELO).</p>
         </div>
       </div>
 

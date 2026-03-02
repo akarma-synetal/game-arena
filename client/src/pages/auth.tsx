@@ -23,7 +23,7 @@ export default function AuthPage() {
     { id: 4, inGameName: "EchoViper", elo: 1605, winnings: 5200, game: { name: "BGMI" } },
     { id: 5, inGameName: "IronFang", elo: 1540, winnings: 4100, game: { name: "Valorant" } },
   ];
-  const lbData = leaderboardProfiles && leaderboardProfiles.length > 0 ? leaderboardProfiles : fallbackProfiles;
+  const lbData = leaderboardProfiles && leaderboardProfiles.length > 0 ? leaderboardProfiles.slice(0, 5) : fallbackProfiles;
   const getRankIcon = (i: number) => {
     if (i === 0) return <Crown className="w-5 h-5 text-yellow-500 drop-shadow-[0_0_8px_rgba(234,179,8,0.6)]" />;
     if (i === 1) return <Medal className="w-5 h-5 text-gray-300 drop-shadow-[0_0_8px_rgba(209,213,219,0.6)]" />;
@@ -128,7 +128,7 @@ export default function AuthPage() {
       <section id="leaderboard" className="py-28 px-6 lg:px-16 bg-card border-y border-white/5">
         <div className="max-w-5xl mx-auto">
           <div className="mb-12">
-            <SectionHeading title="Global Rankings" eyebrow="Live" subtitle="Top operatives sorted by combat rating (ELO)" />
+            <SectionHeading title="Global Rankings" eyebrow="Live" subtitle="Top 5 operatives sorted by combat rating (ELO)" />
           </div>
           <CyberCard className="p-0 overflow-hidden rounded-3xl border-white/10 bg-black/50">
             <div className="overflow-x-auto">

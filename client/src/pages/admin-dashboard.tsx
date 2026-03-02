@@ -1,12 +1,12 @@
-import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { useAdminTab } from "@/context/AdminContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl } from "@shared/routes";
 import { CyberCard, NeonBadge } from "@/components/ui-extras";
-import { Shield, Plus, Users, Trophy, Settings, Users as UsersIcon, Gamepad, Gift, Info } from "lucide-react";
+import { Shield, Plus, Users, Trophy, Settings, Users as UsersIcon, Gamepad, Gift, Info, Crown, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,12 +17,26 @@ export default function AdminDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { activeTab, setActiveTab } = useAdminTab();
 
   const { data: appSettings } = useQuery({ queryKey: [api.settings.get.path] });
   const { data: allProfiles } = useQuery({ queryKey: [api.profiles.all.path] });
   const { data: allTournaments } = useQuery({ queryKey: [api.tournaments.list.path] });
   const { data: allTeams } = useQuery({ queryKey: [api.teams.list.path] });
   const { data: allGames } = useQuery({ queryKey: [api.games.list.path] });
+  const { data: allAccounts } = useQuery({
+    queryKey: ["/api/admin/accounts"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/accounts", { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch accounts");
+      return res.json();
+    },
+  });
+  const { data: leaderboard } = useQuery({ queryKey: [api.profiles.leaderboard.path] });
+
+  const totalPlayers = (allAccounts || []).filter((a: any) => a.role === "player").length;
+  const totalPartners = (allAccounts || []).filter((a: any) => a.role === "partner").length;
+  const blockedProfiles = (allProfiles || []).filter((p: any) => p.isBlocked).length;
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (updates: any) => await apiRequest("POST", api.settings.update.path, updates),
@@ -61,17 +75,21 @@ export default function AdminDashboard() {
         <NeonBadge color="primary">Admin Level 100</NeonBadge>
       </div>
 
-      <Tabs defaultValue="settings" className="w-full">
-        <TabsList className="bg-card/50 border border-white/10 w-full justify-start p-1 h-auto mb-8">
-          <TabsTrigger value="settings" className="data-[state=active]:bg-primary uppercase text-xs tracking-widest py-3 px-6"><Settings className="w-4 h-4 mr-2"/> General</TabsTrigger>
-          <TabsTrigger value="players" className="data-[state=active]:bg-secondary uppercase text-xs tracking-widest py-3 px-6"><UsersIcon className="w-4 h-4 mr-2"/> Operatives</TabsTrigger>
-          <TabsTrigger value="tournaments" className="data-[state=active]:bg-accent uppercase text-xs tracking-widest py-3 px-6"><Trophy className="w-4 h-4 mr-2"/> Missions</TabsTrigger>
-          <TabsTrigger value="teams" className="data-[state=active]:bg-primary uppercase text-xs tracking-widest py-3 px-6"><Shield className="w-4 h-4 mr-2"/> Squads</TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsContent value="overview">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4">
+            <CyberCard><p className="text-xs uppercase tracking-widest text-muted-foreground">Players</p><p className="text-3xl font-display text-primary mt-2">{totalPlayers}</p></CyberCard>
+            <CyberCard><p className="text-xs uppercase tracking-widest text-muted-foreground">Partners</p><p className="text-3xl font-display text-primary mt-2">{totalPartners}</p></CyberCard>
+            <CyberCard><p className="text-xs uppercase tracking-widest text-muted-foreground">Blocked</p><p className="text-3xl font-display text-primary mt-2">{blockedProfiles}</p></CyberCard>
+            <CyberCard><p className="text-xs uppercase tracking-widest text-muted-foreground">Tournaments</p><p className="text-3xl font-display text-primary mt-2">{allTournaments?.length || 0}</p></CyberCard>
+            <CyberCard><p className="text-xs uppercase tracking-widest text-muted-foreground">Teams</p><p className="text-3xl font-display text-primary mt-2">{allTeams?.length || 0}</p></CyberCard>
+            <CyberCard><p className="text-xs uppercase tracking-widest text-muted-foreground">Games</p><p className="text-3xl font-display text-primary mt-2">{allGames?.length || 0}</p></CyberCard>
+          </div>
+        </TabsContent>
 
         <TabsContent value="settings">
           <CyberCard glowColor="primary" className="max-w-2xl">
-            <h2 className="text-2xl font-display mb-6 uppercase tracking-wider">System Configuration</h2>
+            <h2 className="text-2xl font-display mb-6 uppercase tracking-wider">Frontend Web Settings</h2>
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className="text-xs uppercase tracking-widest text-muted-foreground">Platform Designation</label>
@@ -87,7 +105,41 @@ export default function AdminDashboard() {
                   }}>Update</Button>
                 </div>
               </div>
+              <div className="space-y-2">
+                <label className="text-xs uppercase tracking-widest text-muted-foreground">Theme Preset</label>
+                <Select defaultValue="neon-dark" onValueChange={(value) => updateSettingsMutation.mutate({ themePreset: value })}>
+                  <SelectTrigger className="bg-background border-white/10"><SelectValue placeholder="Theme" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="neon-dark">Neon Dark</SelectItem>
+                    <SelectItem value="cyber-purple">Cyber Purple</SelectItem>
+                    <SelectItem value="classic-dark">Classic Dark</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+          </CyberCard>
+        </TabsContent>
+
+        <TabsContent value="partners">
+          <CyberCard className="p-0 overflow-hidden">
+            <Table>
+              <TableHeader className="bg-white/5">
+                <TableRow>
+                  <TableHead className="uppercase text-[10px] tracking-widest">Username</TableHead>
+                  <TableHead className="uppercase text-[10px] tracking-widest">Role</TableHead>
+                  <TableHead className="uppercase text-[10px] tracking-widest">Created</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(allAccounts || []).filter((a: any) => a.role === "partner").map((account: any) => (
+                  <TableRow key={account.id}>
+                    <TableCell className="font-medium text-primary">{account.username}</TableCell>
+                    <TableCell><NeonBadge color="accent">PARTNER</NeonBadge></TableCell>
+                    <TableCell>{new Date(account.createdAt).toLocaleDateString()}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CyberCard>
         </TabsContent>
 
@@ -174,6 +226,69 @@ export default function AdminDashboard() {
               </TableBody>
             </Table>
           </CyberCard>
+        </TabsContent>
+
+        <TabsContent value="games">
+          <CyberCard className="p-0 overflow-hidden">
+            <Table>
+              <TableHeader className="bg-white/5">
+                <TableRow>
+                  <TableHead className="uppercase text-[10px] tracking-widest">Game</TableHead>
+                  <TableHead className="uppercase text-[10px] tracking-widest">Display Name</TableHead>
+                  <TableHead className="uppercase text-[10px] tracking-widest">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {allGames?.map((game: any) => (
+                  <TableRow key={game.id}>
+                    <TableCell className="uppercase font-display">{game.name}</TableCell>
+                    <TableCell>{game.displayName}</TableCell>
+                    <TableCell><NeonBadge color="primary">Active</NeonBadge></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CyberCard>
+        </TabsContent>
+
+        <TabsContent value="leaderboard">
+          <CyberCard className="p-0 overflow-hidden">
+            <Table>
+              <TableHeader className="bg-white/5">
+                <TableRow>
+                  <TableHead className="uppercase text-[10px] tracking-widest">Rank</TableHead>
+                  <TableHead className="uppercase text-[10px] tracking-widest">Operative</TableHead>
+                  <TableHead className="uppercase text-[10px] tracking-widest text-right">ELO</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(leaderboard || []).slice(0, 20).map((entry: any, index: number) => (
+                  <TableRow key={entry.id}>
+                    <TableCell className="font-display">#{index + 1}</TableCell>
+                    <TableCell>{entry.inGameName}</TableCell>
+                    <TableCell className="text-right text-primary font-display">{entry.elo}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CyberCard>
+        </TabsContent>
+
+        <TabsContent value="roles">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <CyberCard>
+              <h3 className="font-display uppercase tracking-widest text-sm mb-3">Super Admin</h3>
+              <p className="text-sm text-muted-foreground">Full access to settings, role control, platform moderation, tournaments, teams and players.</p>
+            </CyberCard>
+            <CyberCard>
+              <h3 className="font-display uppercase tracking-widest text-sm mb-3">Partner</h3>
+              <p className="text-sm text-muted-foreground">Access to partner dashboard, tournament oversight, follower metrics, ratings and subscription status.</p>
+            </CyberCard>
+            <CyberCard>
+              <h3 className="font-display uppercase tracking-widest text-sm mb-3">Player</h3>
+              <p className="text-sm text-muted-foreground">Access to gameplay dashboard, teams, tournaments, challenges, rankings, winnings and social stats.</p>
+            </CyberCard>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
